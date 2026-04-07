@@ -1,13 +1,15 @@
 FROM rocm/primus:v26.2
 ENV COMFYUI_PATH=/workload/ComfyUI
 ENV COMFYUI_BRANCH=amd-integration
+ENV COMFYUI_MANAGER_BRANCH=bbafbb1290f000c5241137d23b3887e6d087036d
+ENV COMFYUI_RGTHREE_BRANCH=683836c46e898668936c433502504cc0627482c5
 RUN git clone --branch  $COMFYUI_BRANCH https://github.com/rocm/comfyui.git $COMFYUI_PATH && \
     git clone https://github.com/ltdrdata/ComfyUI-Manager $COMFYUI_PATH/custom_nodes/comfyui-manager && \
     cd $COMFYUI_PATH/custom_nodes/comfyui-manager && \
-    git checkout 4.1 && \
+    git checkout $COMFYUI_MANAGER_BRANCH && \
     git clone https://github.com/rgthree/rgthree-comfy.git $COMFYUI_PATH/custom_nodes/rgthree-comfy && \
     cd $COMFYUI_PATH/custom_nodes/rgthree-comfy && \
-    git checkout 8ff50e4
+    git checkout $COMFYUI_RGTHREE_BRANCH
 RUN pip install --upgrade pip
 RUN sed -i 's/torch/#torch/g' $COMFYUI_PATH/requirements.txt
 RUN pip install -r $COMFYUI_PATH/requirements.txt && \
