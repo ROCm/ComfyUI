@@ -19,25 +19,9 @@ Setup
 
 To run this workflow:
 
-1. Establish an SSH tunnel between your local machine and the remote server:
+1. Follow the :ref:`comfyui-on-rocm-installation` steps to set up the ComfyUI environment and launch the ComfyUI WebUI.
 
-   .. code-block:: bash
-
-      ssh -N -L 8188:localhost:8188 <user>@<remote IP> -J <user>@<jump host IP>
-
-2. Find the required models from the ComfyUI readme and download them to their respective folders under ``$COMFYUI_PATH/models`` on your server.
-
-   For example, the following downloads text encoder safetensors (``umt5_xxl_fp8_e4m3fn_scaled.safetensors``) to the ``text_encoders`` folder on the ComfyUI remote server:
-
-   .. code-block:: bash
-
-      cd $COMFYUI_PATH/models
-      cd text_encoders
-      wget https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors
-
-3. Once the remote server is running, open the URL ``<remote IP>:8188`` (or ``localhost:8188``) in your local browser, unless you have changed the default port from 8188 to something else.
-
-   Once greeted by the UI, navigate to **Templates → Video** and double-click the **Wan 2.2 14B Text to Video** template.
+2. Select **"Template"** from the navigation panel on the left and search for the **Wan 2.2 14B Text to Video** template.
 
    .. figure:: ../images/wan22-templates-video.png
       :align: center
@@ -45,10 +29,11 @@ To run this workflow:
 
       **Templates → Video:** under *Generation type*, choose **Video**, then open the **Wan 2.2 14B Text to Video** template (e.g. double-click the card).
 
+3. Once the template is loaded, click **Run** to execute the workflow.
+
+
 Configuration
 --------------------------------------------------------------------
-
-Once the template is loaded, click **Run** to execute the workflow.
 
 To trigger a run, enter prompts in the **CLIP Text Encode** nodes for positive and negative prompts and hit the blue **Run** button.
 
