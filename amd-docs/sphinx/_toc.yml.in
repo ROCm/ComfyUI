@@ -14,11 +14,11 @@ subtrees:
 
 - caption: How-to
   entries:
-  - file: how-to\download-models.rst
+  - file: how-to/download-models.rst
     title: Download and work with models
-  - file: how-to\hunyuan3d-workflow.rst
+  - file: how-to/hunyuan3d-workflow.rst
     title: Hunyuan3D 2.1 workflow
-  - file: how-to\wan-inference-workflow.rst
+  - file: how-to/wan-inference-workflow.rst
     title: Wan 2.2 inference workflow
 
 - caption: Reference
