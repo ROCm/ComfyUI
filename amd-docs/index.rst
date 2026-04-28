@@ -30,11 +30,11 @@ The ComfyUI public repository is located at `https://github.com/ROCm/ComfyUI/tre
 
     * :doc:`Install ComfyUI <install/comfyui-install>`
 
-  .. grid-item-card:: How-to
+  .. grid-item-card:: How to
 
-    * :doc:`Download and work with models <how-to/download-models>`
-    * :doc:`Hunyuan3D 2.1 workflow <how-to/hunyuan3d-workflow>`
-    * :doc:`Wan 2.2 inference workflow <how-to/wan-inference-workflow>`
+    * :doc:`Download and use models in ComfyUI <how-to/download-models>`
+    * :doc:`Run the Hunyuan3D 2.1 template in ComfyUI <how-to/hunyuan3d-workflow>`
+    * :doc:`Run the Wan 2.2 inference template in ComfyUI <how-to/wan-inference-workflow>`
 
   .. grid-item-card:: Reference
 

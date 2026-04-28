@@ -5,10 +5,14 @@
 .. _comfyui-download-models:
 
 ********************************************************************
-Download and work with models
+Download and use models in ComfyUI
 ********************************************************************
 
-ComfyUI enables you to easily use models and build both simple and complex workflows with them. However, you must first download the models you want to use. While you can download models directly from the UI, the simplest and most stable method is to download them from a model repository (such as Hugging Face or Civitai) using command-line tools like ``curl``.
+ComfyUI makes it easy to use models and build both simple and complex workflows with them.
+However, you must first download the models you want to use. While you can download models directly from the UI,
+the simplest and most stable method is to download them from a model repository (such as
+`Hugging Face <https://huggingface.co/models>`__ or `Civitai <https://civitai.com/models>`__)
+using command-line tools like ``curl``.
 
 When downloading models through the command line, ensure you save them to the directories expected by ComfyUI:
 
@@ -21,12 +25,12 @@ When downloading models through the command line, ensure you save them to the di
 
 Saving models to these directories makes it possible to use them in the standard ComfyUI nodes.
 
-Download Custom Nodes
+Download custom nodes
 ====================================================================
 
 ComfyUI comes with a rich library of nodes and templates. Additionally, a vast community builds custom nodes that you can import and install in two ways: from the command line or using the ComfyUI Manager.
 
-Command Line Installation
+Command line installation
 --------------------------------------------------------------------
 
 To install nodes from the command line, clone a custom node repository into the ``custom_nodes`` directory and optionally install the dependencies:
@@ -38,9 +42,9 @@ To install nodes from the command line, clone a custom node repository into the 
 
 .. note::
 
-   For newly installed nodes to appear in the UI, you need to restart the server.
+   For newly installed nodes to appear in the UI, ensure you restart the server.
 
-ComfyUI Manager Installation
+ComfyUI Manager installation
 --------------------------------------------------------------------
 
-Installing nodes with the ComfyUI Manager is done directly in the UI. Simply select the custom nodes to install from the navigator and restart the server.
+Installing nodes with the ComfyUI Manager is done directly in the UI. Select the custom nodes to install from the navigator and restart the server.

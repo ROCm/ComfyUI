@@ -12,14 +12,14 @@ subtrees:
   - file: install/comfyui-install.rst
     title: Install ComfyUI
 
-- caption: How-to
+- caption: How to
   entries:
   - file: how-to/download-models.rst
-    title: Download and work with models
+    title: Download and use models
   - file: how-to/hunyuan3d-workflow.rst
-    title: Hunyuan3D 2.1 workflow
+    title: Run the Hunyuan3D 2.1 template
   - file: how-to/wan-inference-workflow.rst
-    title: Wan 2.2 inference workflow
+    title: Run the Wan 2.2 inference template
 
 - caption: Reference
   entries:

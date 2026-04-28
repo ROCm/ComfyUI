@@ -12,7 +12,7 @@ What is ComfyUI?
 lets you create images, videos, and audio with minimal coding. You can even create 
 diffusion workflows by dragging and dropping nodes in a visual interface.
 
-To use a stable diffusion model in ComfyUI, you simply need to:
+To use a stable diffusion model in ComfyUI, you need to:
 
 1. Install ComfyUI
 2. Download your desired model
@@ -55,7 +55,7 @@ AI without extensive programming knowledge. Here's why ComfyUI stands out:
 * **Multi-modal capabilities**: Work with images, videos, and audio in a unified interface
 * **Resource efficiency**: Optimize memory usage and processing through intelligent node execution
 
-Features and Use Cases
+Features and use cases
 ====================================================================
 
 ComfyUI provides the following key features:
