@@ -42,13 +42,13 @@ The prebuilt image contains a fully configured ComfyUI installation and all requ
 
    .. tab-set::
 
-      .. tab-item:: ROCm 7.2.0
+      .. tab-item:: ROCm 7.2.0 + Ubuntu 24.04
 
          .. code-block:: bash
 
             docker pull rocm/comfyui:comfyui-0.18.2.amd0_rocm7.2.0_ubuntu24.04
 
-      .. tab-item:: ROCm 7.1.0
+      .. tab-item:: ROCm 7.1.0 + Ubuntu 22.04
 
          .. code-block:: bash
 
@@ -58,7 +58,7 @@ The prebuilt image contains a fully configured ComfyUI installation and all requ
 
    .. tab-set::
 
-      .. tab-item:: ROCm 7.2.0
+      .. tab-item:: ROCm 7.2.0 + Ubuntu 24.04
 
          .. code-block:: bash
 
@@ -73,7 +73,7 @@ The prebuilt image contains a fully configured ComfyUI installation and all requ
             -p 8188:8188 \
             rocm/comfyui:comfyui-0.18.2.amd0_rocm7.2.0_ubuntu24.04
 
-      .. tab-item:: ROCm 7.1.0
+      .. tab-item:: ROCm 7.1.0 + Ubuntu 22.04
 
          .. code-block:: bash
 
