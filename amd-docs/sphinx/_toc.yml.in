@@ -15,16 +15,16 @@ subtrees:
 - caption: How to
   entries:
   - file: how-to/download-models.rst
-    title: Download and use models
+    title: Download and use models in ComfyUI
   - file: how-to/hunyuan3d-workflow.rst
-    title: Run the Hunyuan3D 2.1 template
+    title: Run the Hunyuan3D 2.1 template in ComfyUI
   - file: how-to/wan-inference-workflow.rst
-    title: Run the Wan 2.2 inference template
+    title: Run the Wan 2.2 inference template in ComfyUI
 
 - caption: Reference
   entries:
   - url: https://docs.comfy.org/index.html
-    title: Overview and reference (upstream)
+    title: Overview and reference documentation (upstream)
 
 - caption: About
   entries:

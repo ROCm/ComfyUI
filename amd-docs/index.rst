@@ -38,7 +38,7 @@ The ComfyUI public repository is located at `https://github.com/ROCm/ComfyUI/tre
 
   .. grid-item-card:: Reference
 
-      * `Overview and reference (upstream) <https://docs.comfy.org/>`__
+      * `Overview and reference documentation (upstream) <https://docs.comfy.org/>`__
 
 To contribute to the documentation, refer to
 `Contributing to ROCm <https://rocm.docs.amd.com/en/latest/contribute/contributing.html>`_.
