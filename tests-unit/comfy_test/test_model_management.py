@@ -1616,5 +1616,360 @@ class TestCoverageHelperPaths(unittest.TestCase):
         self.assertLess(v, 1e9)
 
 
+
+class _FakePatcher:
+    def __init__(self):
+        self.load_device = torch.device("cpu")
+        self.parent = None
+        self.model = torch.nn.Linear(2, 2, bias=True)
+
+    def model_patches_models(self):
+        return []
+
+    def is_dynamic(self):
+        return False
+
+    def is_clone(self, _o):
+        return False
+
+    def model_size(self):
+        return 64
+
+    def loaded_size(self):
+        return 0
+
+    def current_loaded_device(self):
+        return self.load_device
+
+    def model_mmap_residency(self, free=False):
+        return 0, 0
+
+    def pinned_memory_size(self):
+        return 0
+
+    def model_dtype(self):
+        return torch.float32
+
+    def model_patches_to(self, *a, **k):
+        return None
+
+    def model_use_more_vram(self, *a, **k):
+        return 0
+
+    def lowvram_patch_counter(self):
+        return 0
+
+    def detach(self, *a, **k):
+        return None
+
+    def partially_unload(self, *a, **k):
+        return 0
+
+    def partially_unload_ram(self, *a, **k):
+        return None
+
+
+class TestModelManagementCoverageExtra(unittest.TestCase):
+    def test_cleanup_models_gc_when_is_dead_runs_gc(self):
+        lm = MagicMock()
+        lm.is_dead.return_value = True
+        lm.real_model = MagicMock(return_value=object())
+        saved = list(mm.current_loaded_models)
+        try:
+            mm.current_loaded_models.clear()
+            mm.current_loaded_models.append(lm)
+            with patch.object(mm, "reset_cast_buffers"):
+                with patch("comfy.model_management.gc", autospec=True) as pgc:
+                    with patch.object(mm, "soft_empty_cache") as psec:
+                        mm.cleanup_models_gc()
+            pgc.collect.assert_called()
+            psec.assert_called()
+            self.assertGreaterEqual(lm.is_dead.call_count, 1)
+        finally:
+            mm.current_loaded_models.clear()
+            mm.current_loaded_models.extend(saved)
+
+    def test_load_models_gpu_cpu_model_completes(self):
+        patcher = _FakePatcher()
+        saved = list(mm.current_loaded_models)
+        vs = mm.vram_state
+        try:
+            mm.current_loaded_models.clear()
+            with patch.object(mm, "is_intel_xpu", return_value=False):
+                with patch.object(mm, "lowvram_available", True):
+                    mm.vram_state = mm.VRAMState.NORMAL_VRAM
+                    try:
+                        mm.load_models_gpu([patcher])
+                    finally:
+                        mm.vram_state = vs
+        finally:
+            n = len(mm.current_loaded_models)
+            mm.current_loaded_models.clear()
+            mm.current_loaded_models.extend(saved)
+        self.assertEqual(n, 1)
+
+    def test_free_memory_mocked_unload_returns_popped(self):
+        saved = list(mm.current_loaded_models)
+        dsm = mm.DISABLE_SMART_MEMORY
+        try:
+            mm.DISABLE_SMART_MEMORY = False
+            mm.current_loaded_models.clear()
+            inner = MagicMock()
+            inner.is_dynamic = MagicMock(return_value=False)
+            mdl = MagicMock()
+            mdl.__class__ = type("C", (), {})
+            mdl.__class__.__name__ = "MM"
+            inner.model = mdl
+            lm = MagicMock()
+            lm.model = inner
+            lm.device = torch.device("cpu")
+            lm.is_dead = MagicMock(return_value=False)
+            lm.model_offloaded_memory = MagicMock(return_value=0)
+            lm.model_memory = MagicMock(return_value=1000)
+            lm.model_unload = MagicMock(return_value=True)
+            lm.model_mmap_residency = MagicMock(return_value=(0, 0))
+            mm.current_loaded_models.append(lm)
+            with patch.object(mm, "cleanup_models_gc", MagicMock()):
+                with patch.object(mm, "get_free_memory", return_value=0):
+                    with patch.object(mm, "get_free_ram", return_value=10**15):
+                        with patch.object(mm, "soft_empty_cache", MagicMock()) as psec:
+                            psec.reset_mock()
+                            vmem = SimpleNamespace(available=10**15)
+                            with patch(
+                                "comfy.model_management.psutil.virtual_memory",
+                                return_value=vmem,
+                            ):
+                                out = mm.free_memory(10**9, torch.device("cpu"), keep_loaded=[])
+            lm.model_unload.assert_called()
+            self.assertEqual(len(out), 1)
+        finally:
+            mm.DISABLE_SMART_MEMORY = dsm
+            mm.current_loaded_models.clear()
+            mm.current_loaded_models.extend(saved)
+
+    def test_get_total_memory_cpu_with_torch_flag(self):
+        a, b = mm.get_total_memory(torch.device("cpu"), torch_free_too=True)
+        self.assertIsInstance(a, (int, float))
+        self.assertIsInstance(b, (int, float))
+        self.assertEqual(a, b)
+
+    @patch.object(mm, "directml_enabled", True)
+    def test_supports_cast_bfloat16_directml_false(self, _de):
+        self.assertFalse(
+            mm.supports_cast(torch.device("cpu"), torch.bfloat16)
+        )
+
+    @patch.object(mm, "should_use_fp16", return_value=False)
+    @patch.object(mm, "should_use_bf16", return_value=True)
+    def test_vae_dtype_falls_back_to_first_allowed(self, _bf, _fp16):
+        for n in ("fp16_vae", "bf16_vae", "fp32_vae"):
+            setattr(args, n, False)
+        try:
+            d = mm.vae_dtype(
+                device=torch.device("cpu"),
+                allowed_dtypes=[torch.bfloat16, torch.float32],
+            )
+        finally:
+            for n in ("fp16_vae", "bf16_vae", "fp32_vae"):
+                setattr(args, n, False)
+        self.assertEqual(d, torch.bfloat16)
+
+    @patch.object(comfy.memory_management, "aimdo_enabled", True)
+    def test_unet_inital_load_device_aimdo_cpu(self, _a):
+        self.assertEqual(
+            mm.unet_inital_load_device(1_000_000, torch.float32),
+            torch.device("cpu"),
+        )
+
+    def test_sync_stream_none_stream(self):
+        mm.sync_stream(torch.device("cpu"), None)
+
+    @unittest.skipUnless(torch.cuda.is_available(), "cuda")
+    def test_sync_stream_waits(self):
+        d = torch.device("cuda:0")
+        s = torch.cuda.Stream(device=d)
+        with patch.object(
+            mm, "current_stream", return_value=torch.cuda.current_stream()
+        ) as ccs:
+            mm.sync_stream(d, s)
+        ccs.assert_called_with(d)
+
+    def test_force_channels_last_respects_arg(self):
+        a = args.force_channels_last
+        try:
+            args.force_channels_last = True
+            self.assertTrue(mm.force_channels_last())
+        finally:
+            args.force_channels_last = a
+
+    def test_device_supports_non_blocking_respects_deterministic(self):
+        a = args.deterministic
+        try:
+            args.deterministic = True
+            self.assertFalse(
+                mm.device_supports_non_blocking(torch.device("cuda:0"))
+            )
+        finally:
+            args.deterministic = a
+
+    @unittest.skipUnless(
+        torch.cuda.is_available(), "cuda: device_supports_non_blocking nvidia"
+    )
+    @unittest.skipIf(
+        not getattr(torch.version, "cuda", None), "no cuda build"
+    )
+    def test_device_supports_non_blocking_cuda_true_default(self):
+        self.assertTrue(
+            mm.device_supports_non_blocking(torch.device("cuda:0"))
+        )
+
+    def test_current_stream_cpu_none(self):
+        self.assertIsNone(mm.current_stream(torch.device("cpu")))
+
+    @patch.object(mm, "cpu_mode", return_value=True)
+    def test_soft_empty_cache_noop_in_cpu_mode(self, _c):
+        mm.soft_empty_cache()
+
+    def test_get_cast_buffer_returns_none_when_ref_is_largest(self):
+        o = object()
+        g1 = mm.LARGEST_CASTED_WEIGHT
+        g2 = dict(mm.STREAM_CAST_BUFFERS)
+        try:
+            mm.LARGEST_CASTED_WEIGHT = (o, 10_000_000)
+            mm.STREAM_CAST_BUFFERS.clear()
+            buf = mm.get_cast_buffer(None, torch.device("cpu"), 100, o)
+        finally:
+            mm.LARGEST_CASTED_WEIGHT = g1
+            mm.STREAM_CAST_BUFFERS.clear()
+            mm.STREAM_CAST_BUFFERS.update(g2)
+        self.assertIsNone(buf)
+
+    def test_get_torch_device_name_for_cpu_type(self):
+        with patch.object(
+            torch.cuda, "get_device_name", create=True, side_effect=RuntimeError
+        ):
+            self.assertEqual(
+                mm.get_torch_device_name(torch.device("cpu")), "cpu"
+            )
+
+    @unittest.skipUnless(
+        len(mm.FLOAT8_TYPES) > 0, "no float8 in this torch"
+    )
+    @patch.object(mm, "maximum_vram_for_weights", return_value=1.0)
+    @patch.object(mm, "should_use_fp16", return_value=False)
+    @patch.object(mm, "should_use_bf16", return_value=False)
+    @patch.object(mm, "supports_fp8_compute", return_value=True)
+    def test_unet_dtype_weight_float8_uses_fp8(
+        self, _sfc, _bf, _f16, _mvw
+    ):
+        wd = mm.FLOAT8_TYPES[0]
+        a = {k: False for k in (
+            "fp32_unet", "fp64_unet", "bf16_unet", "fp16_unet",
+            "fp8_e4m3fn_unet", "fp8_e5m2_unet", "fp8_e8m0fnu_unet",
+        )}
+        orig = {k: getattr(args, k) for k in a}
+        try:
+            for k, v in a.items():
+                setattr(args, k, v)
+            d = mm.unet_dtype(
+                device=torch.device("cpu"),
+                weight_dtype=wd,
+            )
+        finally:
+            for k, v in orig.items():
+                setattr(args, k, v)
+        self.assertEqual(d, wd)
+
+    @patch.object(mm, "maximum_vram_for_weights", return_value=10**6)
+    @patch.object(mm, "should_use_fp16", return_value=False)
+    @patch.object(mm, "should_use_bf16", return_value=False)
+    @patch.object(mm, "supports_fp8_compute", return_value=False)
+    @unittest.skipUnless(
+        len(mm.FLOAT8_TYPES) > 0, "no float8 in this torch"
+    )
+    def test_unet_dtype_float8_falls_back_when_tiny_vram(
+        self, _sfc, _bf, _f16, _mvw
+    ):
+        wd = mm.FLOAT8_TYPES[0]
+        a = {k: False for k in (
+            "fp32_unet", "fp64_unet", "bf16_unet", "fp16_unet",
+            "fp8_e4m3fn_unet", "fp8_e5m2_unet", "fp8_e8m0fnu_unet",
+        )}
+        orig = {k: getattr(args, k) for k in a}
+        try:
+            for k, v in a.items():
+                setattr(args, k, v)
+            d = mm.unet_dtype(
+                device=torch.device("cpu"),
+                model_params=1_000_000_000,
+                weight_dtype=wd,
+            )
+        finally:
+            for k, v in orig.items():
+                setattr(args, k, v)
+        self.assertEqual(d, wd)
+
+    def test_unet_dtype_manual_cast_branch_prefers_fp32_fallback(self):
+        a = {k: False for k in (
+            "fp32_unet", "fp64_unet", "bf16_unet", "fp16_unet",
+            "fp8_e4m3fn_unet", "fp8_e5m2_unet", "fp8_e8m0fnu_unet",
+        )}
+        orig = {k: getattr(args, k) for k in a}
+        porig = mm.PRIORITIZE_FP16
+        try:
+            for k, v in a.items():
+                setattr(args, k, v)
+            mm.PRIORITIZE_FP16 = False
+            with patch.object(
+                mm, "should_use_fp16", return_value=True
+            ), patch.object(
+                mm, "should_use_bf16", return_value=True
+            ):
+                d = mm.unet_dtype(
+                    device=torch.device("cpu"),
+                    model_params=0,
+                    supported_dtypes=[torch.float32],
+                    weight_dtype=torch.bfloat16,
+                )
+        finally:
+            for k, v in orig.items():
+                setattr(args, k, v)
+            mm.PRIORITIZE_FP16 = porig
+        self.assertEqual(d, torch.float32)
+
+    @patch.object(
+        comfy.memory_management, "interpret_gathered_like",
+        return_value=[],
+    )
+    def test_cast_to_gathered_empty_tensors(self, _ig):
+        r = torch.zeros(1, dtype=torch.float32)
+        mm.cast_to_gathered([], r, non_blocking=False, stream=None)
+
+    def test_cast_to_cross_device_uses_r_when_provided(self):
+        if not torch.cuda.is_available():
+            self.skipTest("cuda")
+        t = torch.ones(2, 2, device="cpu", dtype=torch.float32)
+        r = torch.empty(2, 2, device="cuda:0", dtype=torch.float32)
+        out = mm.cast_to(
+            t,
+            dtype=torch.float32,
+            device=torch.device("cuda:0"),
+            r=r,
+        )
+        self.assertIs(out, r)
+        self.assertTrue(torch.equal(out.cpu(), t))
+
+    @patch.object(args, "force_non_blocking", True)
+    def test_device_supports_non_blocking_force(self, *a):
+        if not torch.cuda.is_available():
+            self.skipTest("cuda")
+        self.assertTrue(
+            mm.device_supports_non_blocking(torch.device("cuda:0"))
+        )
+
+    def test_get_supported_float8_list(self):
+        t = mm.get_supported_float8_types()
+        self.assertIsInstance(t, list)
+
 if __name__ == "__main__":
     unittest.main()
