@@ -51,6 +51,6 @@ Additional resources
 --------------------------------------------------------------------
 
 - `ComfyUI Wan 2.2 Documentation <https://docs.comfy.org/tutorials/video/wan/wan2_2>`__
-- `Wan 2.1 Model Files (HuggingFace) <https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged>`__
+- `Wan 2.2 Model Files (HuggingFace) <https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged>`__
 
 
