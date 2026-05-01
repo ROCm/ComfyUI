@@ -1,0 +1,34 @@
+defaults:
+  numbered: False
+  maxdepth: 6
+root: index
+subtrees:
+- entries:
+  - file: what-is-comfyui.rst
+    title: What is ComfyUI?
+
+- caption: Install
+  entries:
+  - file: install/comfyui-install.rst
+    title: Install ComfyUI
+
+- caption: How to
+  entries:
+  - file: how-to/download-models.rst
+    title: Download and use models in ComfyUI
+  - file: how-to/hunyuan3d-workflow.rst
+    title: Run the Hunyuan3D 2.1 template in ComfyUI
+  - file: how-to/wan-inference-workflow.rst
+    title: Run the Wan 2.2 inference template in ComfyUI
+
+- caption: Reference
+  entries:
+  - url: https://docs.comfy.org/index.html
+    title: Overview and reference documentation (upstream)
+
+- caption: About
+  entries:
+  - url: https://rocm.blogs.amd.com/software-tools-optimization/comfyui-on-amd/README.html
+    title: ROCm ComfyUI blog
+  - file: about/license.rst
+    title: License
