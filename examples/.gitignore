@@ -1,0 +1,11 @@
+# Runtime artifacts produced when amd_comfyui_rocm_tutorial.ipynb is executed.
+# Everything in here is regenerable from the notebook + workflow JSONs.
+outputs/
+
+# Jupyter scratch.
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+*-checkpoint.png
+
+# Local helpers / scratch.
+_executed.ipynb
